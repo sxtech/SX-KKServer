@@ -82,7 +82,7 @@ def get_device_state_by_ip(ip, serialno, white_list='[]'):
 
 @cache.memoize(60)
 def get_white_list():
-    white_list = VehicleManage.query.all()
+    white_list = VehicleManage.query.filter_by(del_flag=0).all()
     w = {
         'addWhiteList': {
             'add_data': []
