@@ -1,0 +1,1 @@
+docker run -it -d --restart=always --name kk_ser --privileged=true --net=host -v /home/GitHub:/home -v /var/GitHub/SX-KKServer:/var centos-python3.6/requests:1.4 gunicorn -c /home/SX-KKServer/gun.py --chdir /home/SX-KKServer run:app
