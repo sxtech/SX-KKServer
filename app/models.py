@@ -54,6 +54,7 @@ class VehiclePass(db.Model):
 
 class DeviceState(db.Model):
     """相机设备状态"""
+    __bind_key__ = 'env'
     __tablename__ = 'device_state'
 
     id = db.Column(db.Integer, primary_key=True)
