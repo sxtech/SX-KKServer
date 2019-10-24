@@ -69,16 +69,14 @@ class DeviceState(db.Model):
     stat_code = db.Column(db.Integer, default=0)
     long = db.Column(db.Numeric(6, 6), default=0.0)
     lat = db.Column(db.Numeric(6, 6), default=0.0)
-    create_time = db.Column(
-        db.DateTime, default=arrow.now('PRC').datetime.replace(tzinfo=None))
-    last_modify = db.Column(
-        db.DateTime, default=arrow.now('PRC').datetime.replace(tzinfo=None))
+    create_time = db.Column(db.DateTime, default='')
+    last_modify = db.Column(db.DateTime, default='')
     update_flag = db.Column(db.Integer, default=0)
     del_flag = db.Column(db.Integer, default=0)
 
     def __init__(self, ip='', serialno='', device_name='', white_list='[]',
-                 stat_code=0, long=0.0, lat=0.0, create_time=None, 
-                 last_modify=None, update_flag=0, del_flag=0):
+                 stat_code=0, long=0.0, lat=0.0, create_time='', 
+                 last_modify='', update_flag=0, del_flag=0):
         self.ip = ip
         self.serialno = serialno
         self.device_name = device_name
@@ -86,14 +84,8 @@ class DeviceState(db.Model):
         self.stat_code = stat_code
         self.long = long
         self.lat = lat
-        if create_time is None:
-            self.create_time = arrow.now('PRC').datetime.replace(tzinfo=None)
-        else:
-            self.create_time = create_time
-        if last_modify is None:
-            self.last_modify = arrow.now('PRC').datetime.replace(tzinfo=None)
-        else:
-            self.last_modify = last_modify
+        self.create_time = create_time
+        self.last_modify = last_modify
         self.update_flag = update_flag
         self.del_flag = del_flag
 
