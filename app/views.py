@@ -76,7 +76,9 @@ def upload_post():
 def get_device_state_by_ip(ip, serialno, white_list='[]'):
     dev = DeviceState.query.filter_by(ip=ip).first()
     if dev is None:
-        dev2 = DeviceState(ip=ip, serialno=serialno, white_list=white_list)
+        n = arrow.now('PRC').datetime.replace(tzinfo=None)
+        dev2 = DeviceState(ip=ip, serialno=serialno, white_list=white_list,
+                    create_time=n, last_modify=n)
         db.session.add(dev2)
         db.session.commit()
         return (dev2.white_list, dev2.last_modify,  dev2.update_flag)
