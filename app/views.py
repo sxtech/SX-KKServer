@@ -46,7 +46,8 @@ def upload_post():
         pass_time = arrow.get(request.json['AlarmInfoPlate']['result']['PlateResult']['timeStamp']['Timeval']['sec']).to('Asia/Shanghai')
         ip_addr = request.json['AlarmInfoPlate']['ipaddr']
         device_name = request.json['AlarmInfoPlate']['deviceName']
-        path_seq = (app.config['BASE_PATH'], ip_addr, 'Plate', pass_time.format('YYYYMMDD'), pass_time.format('HH'))
+        serialno = request.json['AlarmInfoPlate']['serialno']
+        path_seq = (app.config['BASE_PATH'], 'Plate', pass_time.format('YYYYMMDD'), serialno, pass_time.format('HH'))
         img_path = '/'.join(path_seq)
         name = '{0}_{1}_{2}'.format(pass_time.format('YYYYMMDDHHmmss'), ms, helper.ip2int(ip_addr))
         pic1 = save_img(img_path, name, request.json['AlarmInfoPlate']['result']['PlateResult']['imageFile']).replace(app.config['BASE_PATH'], app.config['BASE_URL_PATH'])
@@ -54,7 +55,8 @@ def upload_post():
         vehicle = VehiclePass(plate_no=plate_no, plate_color=plate_color,
                        pass_time=pass_time.datetime, site_id='1',
                        pic1=pic1, pic2=pic2, ip_addr=ip_addr,
-                       device_name=device_name, uuid=uu_id)
+                       device_name=device_name, uuid=uu_id,
+                       serialno=serialno)
         db.session.add(vehicle)
         db.session.commit()
 
