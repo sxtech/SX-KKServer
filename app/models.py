@@ -32,10 +32,7 @@ class VehiclePass(db.Model):
                  pic3='', pic4='', ip_addr='', device_name='', uuid='', 
                  create_time=None, serialno=''):
         self.plate_no = plate_no
-        if pass_time is None:
-            self.pass_time = arrow.now('PRC').datetime.replace(tzinfo=None)
-        else:
-            self.pass_time = pass_time
+        self.pass_time = pass_time
         self.site_id = site_id
         self.direction = direction
         self.status = status
@@ -46,10 +43,7 @@ class VehiclePass(db.Model):
         self.ip_addr = ip_addr
         self.device_name = device_name
         self.uuid = uuid
-        if create_time is None:
-            self.create_time = arrow.now('PRC').datetime.replace(tzinfo=None)
-        else:
-            self.create_time = create_time
+        self.create_time = create_time
         self.serialno = serialno
         
     def __repr__(self):
