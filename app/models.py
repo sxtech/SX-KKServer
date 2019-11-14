@@ -75,7 +75,7 @@ class DeviceState(db.Model):
                  stat_code=0, vehicle_point_no=1, direction=1, long=0.000000,
                  lat=0.000000, ps='', create_time='', last_modify='',
                  update_flag=0, del_flag=0):
-        self.ip = ip
+        self.ip_addr = ip_addr
         self.serialno = serialno
         self.device_name = device_name
         self.white_list = white_list

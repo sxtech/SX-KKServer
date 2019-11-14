@@ -74,11 +74,11 @@ def upload_post():
 
 #@cache.memoize(60)
 def get_device_state_by_ip(ip, serialno, white_list='[]'):
-    dev = DeviceState.query.filter_by(ip=ip).first()
+    dev = DeviceState.query.filter_by(ip_addr=ip).first()
     if dev is None:
         n = arrow.now('PRC').datetime.replace(tzinfo=None)
-        dev2 = DeviceState(ip=ip, serialno=serialno, white_list=white_list,
-                    create_time=n, last_modify=n)
+        dev2 = DeviceState(ip_addr=ip, serialno=serialno, white_list=white_list,
+                    create_time=n, last_modify=n, update_flag=1)
         db.session.add(dev2)
         db.session.commit()
         return (dev2.white_list, dev2.last_modify,  dev2.update_flag)
@@ -106,7 +106,7 @@ def get_white_list():
 
 # 更新标记设置为1
 def update_device_state_flag_by_ip(ip, update_flag=-1, white_list='[]'):
-    dev = DeviceState.query.filter_by(ip=ip).first()
+    dev = DeviceState.query.filter_by(ip_addr=ip).first()
     if update_flag != -1:
         dev.update_flag = update_flag
     if white_list != '[]':
