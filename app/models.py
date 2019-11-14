@@ -56,28 +56,35 @@ class DeviceState(db.Model):
     __tablename__ = 'device_state'
 
     id = db.Column(db.Integer, primary_key=True)
-    ip = db.Column(db.String(16), default='')
+    ip_addr = db.Column(db.String(16), default='')
     serialno = db. Column(db.String(128), default='')
     device_name = db.Column(db.String(128), default='')
     white_list = db.Column(db.String(256), default='[]')
     stat_code = db.Column(db.Integer, default=0)
+    vehicle_point_no = db.Column(db.Integer, default=1)
+    direction = db.Column(db.Integer, default=1)
     long = db.Column(db.Numeric(6, 6), default=0.0)
     lat = db.Column(db.Numeric(6, 6), default=0.0)
+    ps = db.Column(db.String(256), default='')
     create_time = db.Column(db.DateTime, default='')
     last_modify = db.Column(db.DateTime, default='')
     update_flag = db.Column(db.Integer, default=0)
     del_flag = db.Column(db.Integer, default=0)
 
-    def __init__(self, ip='', serialno='', device_name='', white_list='[]',
-                 stat_code=0, long=0.0, lat=0.0, create_time='', 
-                 last_modify='', update_flag=0, del_flag=0):
+    def __init__(self, ip_addr='', serialno='', device_name='', white_list='[]',
+                 stat_code=0, vehicle_point_no=1, direction=1, long=0.000000,
+                 lat=0.000000, ps='', create_time='', last_modify='',
+                 update_flag=0, del_flag=0):
         self.ip = ip
         self.serialno = serialno
         self.device_name = device_name
         self.white_list = white_list
         self.stat_code = stat_code
+        self.vehicle_point_no = vehicle_point_no
+        self.direction = direction
         self.long = long
         self.lat = lat
+        self.ps = ps
         self.create_time = create_time
         self.last_modify = last_modify
         self.update_flag = update_flag
