@@ -101,12 +101,13 @@ def heart_post():
     #if not request.json:
     #    return jsonify({'message': 'Problems parsing JSON'}), 415
     try:
-        result = '{}'
         logger.info(request.json)
-        add_vehicle_http(request.headers.get("X-Real-IP", request.remote_addr), request.json)
+        #add_vehicle_http(request.headers.get("X-Real-IP", request.remote_addr), request.json)
+        data = "{0},host={1},serialno={2} value={3}".format('heart', request.headers.get("X-Real-IP", request.remote_addr), request.json['heartbeat']['serialno'], request.json['heartbeat']['countid'])
+        helper.write_info(app.config['INFLUXDB_URL'], data)
         if request.json.get('heartbeat', None) is not None:
             dev = get_device_state_by_ip(request.headers.get("X-Real-IP", request.remote_addr), request.json['heartbeat']['serialno'])
     except Exception as e:
         logger.error(e)
-    return result, 201, {'Content-Type': 'application/json'}
+    return {}, 201, {'Content-Type': 'application/json'}
     #return jsonify(app.config['WHITE_LIST_DEL']), 201
