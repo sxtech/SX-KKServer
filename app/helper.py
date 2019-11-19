@@ -1,4 +1,7 @@
 ﻿# -*- coding: utf-8 -*-
+import socket
+import struct
+
 import requests
 
 # ip地址转整数
