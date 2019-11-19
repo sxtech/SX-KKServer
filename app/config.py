@@ -17,7 +17,7 @@ class Config(object):
     BASE_PATH = '/home/images'
     # 基础URL路径
     BASE_URL_PATH = 'http://112.91.72.23:8099/images'
-    # 白名单车辆查询
+    # 时序数据库地址
     INFLUXDB_URL = 'http://localhost:8086/write?db=mz'
 
 
