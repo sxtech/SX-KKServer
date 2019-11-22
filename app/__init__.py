@@ -21,11 +21,11 @@ db = SQLAlchemy(app)
 
 debug_logging('logs/error.log')
 access_logging('logs/access.log')
-#online_logging('logs/msg.log')
+online_logging('logs/msg.log')
 
 logger = logging.getLogger('root')
 access_logger = logging.getLogger('access')
-#msg_logger = logging.getLogger('msg')
+msg_logger = logging.getLogger('msg')
 
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
