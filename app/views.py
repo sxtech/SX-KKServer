@@ -1,13 +1,14 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 import os
 import json
+import time
 import uuid
 import base64
 
 import arrow
 from flask import g, request, make_response, jsonify, abort
 
-from . import db, app, cache, logger, access_logger
+from . import db, app, cache, logger, access_logger, msg_logger
 from .models import *
 from . import helper
 
@@ -54,12 +55,14 @@ def upload_post():
         path_seq = (app.config['BASE_PATH'], 'Plate', pass_time.format('YYYYMMDD'), serialno, pass_time.format('HH'))
         img_path = '/'.join(path_seq)
         name = '{0}_{1}_{2}'.format(pass_time.format('YYYYMMDDHHmmss'), serialno, helper.ip2int(ip_addr))
-        pic1 = save_img(img_path, name, request.json['AlarmInfoPlate']['result']['PlateResult']['imageFile']).replace(app.config['BASE_PATH'], app.config['BASE_URL_PATH'])
-        pic2 = save_img(img_path, name+'_plate', request.json['AlarmInfoPlate']['result']['PlateResult']['imageFragmentFile']).replace(app.config['BASE_PATH'], app.config['BASE_URL_PATH'])
+        pic_path1 = save_img(img_path, name, request.json['AlarmInfoPlate']['result']['PlateResult']['imageFile'])
+        pic_path2 = save_img(img_path, name+'_plate', request.json['AlarmInfoPlate']['result']['PlateResult']['imageFragmentFile'])
+        pic_url1 = pic_path1.replace(app.config['BASE_PATH'], app.config['BASE_URL_PATH'])
+        pic_url2 = pic_path2.replace(app.config['BASE_PATH'], app.config['BASE_URL_PATH'])
         try:
             vehicle = VehiclePass(plate_no=plate_no, plate_color=plate_color,
                            pass_time=pass_time.datetime, site_id='1',
-                           pic1=pic1, pic2=pic2, ip_addr=ip_addr,
+                           pic1=pic_url1, pic2=pic_url2, ip_addr=ip_addr,
                            device_name=device_name, uuid=uu_id,
                            serialno=serialno)
             db.session.add(vehicle)
@@ -79,11 +82,14 @@ def upload_post():
         vehicle2 = VehiclePass2(plate_no=plate_no, plate_color=plate_color,
                         pass_time=pass_time.datetime, stat_code=stat_code,
                         vehicle_point_no=vehicle_point_no, direction=direction,
-                        pic1=pic1, pic2=pic2, ip_addr=ip_addr, device_name=device_name,
-                        uuid=uu_id, serialno=serialno)
+                        pic1=pic_url1, pic2=pic_url2, ip_addr=ip_addr,
+                        device_name=device_name, uuid=uu_id, serialno=serialno)
         db.session.add(vehicle2)
         db.session.commit()
 
+        request.json['AlarmInfoPlate']['result']['PlateResult']['imageFile'] = pic_path1
+        request.json['AlarmInfoPlate']['result']['PlateResult']['imageFragmentFile'] = pic_path2
+        msg_logger.info(request.json)
     except Exception as e:
         logger.error(e)
         return jsonify({}), 201
@@ -118,8 +124,8 @@ def heart_post():
     #if not request.json:
     #    return jsonify({'message': 'Problems parsing JSON'}), 415
     try:
-        logger.info(request.json)
-        data = "{0},host={1},serialno={2} value={3}".format('heart', request.headers.get("X-Real-IP", request.remote_addr), request.json['heartbeat']['serialno'], request.json['heartbeat']['countid'])
+        msg_logger.info(request.json)
+        data = "{0},host={1},serialno={2} value={3}".format('heart', request.headers.get("X-Real-IP", request.remote_addr), request.json['heartbeat']['serialno'], request.json['heartbeat']['countid'], request.json['heartbeat']['timeStamp']['Timeval']['sec'] - int(time.time()))
         helper.write_info(app.config['INFLUXDB_URL'], data)
         if request.json.get('heartbeat', None) is not None:
             dev = set_device_state_by_ip(request.headers.get("X-Real-IP", request.remote_addr), request.json['heartbeat']['serialno'])
