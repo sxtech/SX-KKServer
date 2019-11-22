@@ -23,7 +23,7 @@ class VehiclePass(db.Model):
     pic4 = db.Column(db.String(128), default='')
     ip_addr = db.Column(db.String(16), default='127.0.0.1')
     device_name = db.Column(db.String(32), default='')
-    uuid = db.Column(db.String(32), default='')
+    uuid = db.Column(db.String(36), default='')
     create_time = db.Column(
         db.DateTime, default=arrow.now('PRC').datetime.replace(tzinfo=None))
     serialno = db.Column(db.String(128), default='')
@@ -33,6 +33,7 @@ class VehiclePass(db.Model):
                  pic3='', pic4='', ip_addr='', device_name='', uuid='', 
                  create_time=None, serialno=''):
         self.plate_no = plate_no
+        self.plate_color = plate_color
         self.pass_time = pass_time
         self.site_id = site_id
         self.direction = direction
@@ -59,7 +60,7 @@ class VehiclePass2(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     plate_no = db.Column(db.String(32), default='-')
-    plate_color = db. Column(db.String(8), default='1')
+    plate_color = db. Column(db.Integer, default=0)
     pass_time = db.Column(
         db.DateTime, default=arrow.now('PRC').datetime.replace(tzinfo=None))
     stat_code = db.Column(db.Integer, default=0)
@@ -72,16 +73,17 @@ class VehiclePass2(db.Model):
     pic4 = db.Column(db.String(128), default='')
     ip_addr = db.Column(db.String(16), default='127.0.0.1')
     device_name = db.Column(db.String(32), default='')
-    uuid = db.Column(db.String(32), default='')
+    uuid = db.Column(db.String(36), default='')
     create_time = db.Column(
         db.DateTime, default=arrow.now('PRC').datetime.replace(tzinfo=None))
     serialno = db.Column(db.String(128), default='')
 
-    def __init__(self, plate_no='-', plate_color='1', pass_time=None,
+    def __init__(self, plate_no='-', plate_color=0, pass_time=None,
                  stat_code=0, vehicle_point_no=1, direction='1', status='1',
-                 pic1='', pic2='', pic3='', pic4='', ip_addr='', device_name='',
-                 uuid='', create_time=None, serialno=''):
+                 pic1='', pic2='', pic3='', pic4='', ip_addr='127.0.0.1',
+                 device_name='', uuid='', create_time=None, serialno=''):
         self.plate_no = plate_no
+        self.plate_color = plate_color
         self.pass_time = pass_time
         self.stat_code = stat_code
         self.vehicle_point_no = vehicle_point_no
