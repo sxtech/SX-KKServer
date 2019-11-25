@@ -32,6 +32,18 @@ def save_img(path, name, data):
     file.close()
     return imgname
 
+def send_vehicle(info):
+    if app.config['PULSAR']['producer'] is None:
+        try:
+            app.config['PULSAR']['client'] = pulsar.Client(app.config['PULSAR']['url'])
+            app.config['PULSAR']['producer'] = app.config['PULSAR']['client'].create_producer(app.config['PULSAR']['topic'])
+            app.config['PULSAR']['producer'].send((info).encode('utf-8'))
+        except Exception as e:
+            app.config['PULSAR']['producer'] = None
+            raise
+    else:
+        app.config['PULSAR']['producer'].send((info).encode('utf-8'))
+
 # 根据ip获取设备状态信息
 @cache.memoize(60)
 def get_device_state_by_ip(ip):
@@ -59,17 +71,7 @@ def upload_post():
         pic_path2 = save_img(img_path, name+'_plate', request.json['AlarmInfoPlate']['result']['PlateResult']['imageFragmentFile'])
         pic_url1 = pic_path1.replace(app.config['BASE_PATH'], app.config['BASE_URL_PATH'])
         pic_url2 = pic_path2.replace(app.config['BASE_PATH'], app.config['BASE_URL_PATH'])
-        try:
-            vehicle = VehiclePass(plate_no=plate_no, plate_color=plate_color,
-                           pass_time=pass_time.datetime, site_id='1',
-                           pic1=pic_url1, pic2=pic_url2, ip_addr=ip_addr,
-                           device_name=device_name, uuid=uu_id,
-                           serialno=serialno)
-            db.session.add(vehicle)
-            db.session.commit()
-        except Exception as e:
-             logger.error(e)
-             db.session.rollback()
+        
         dev = get_device_state_by_ip(ip_addr)
         if dev is None:
             stat_code = 0
@@ -79,16 +81,22 @@ def upload_post():
             stat_code = dev['stat_code']
             vehicle_point_no = dev['vehicle_point_no']
             direction = dev['direction']
-        vehicle2 = VehiclePass2(plate_no=plate_no, plate_color=plate_color,
-                        pass_time=pass_time.datetime, stat_code=stat_code,
-                        vehicle_point_no=vehicle_point_no, direction=direction,
-                        pic1=pic_url1, pic2=pic_url2, ip_addr=ip_addr,
-                        device_name=device_name, uuid=uu_id, serialno=serialno)
-        db.session.add(vehicle2)
-        db.session.commit()
+        try:
+            vehicle2 = VehiclePass2(plate_no=plate_no, plate_color=plate_color,
+                            pass_time=pass_time.datetime, stat_code=stat_code,
+                            vehicle_point_no=vehicle_point_no, direction=direction,
+                            pic1=pic_url1, pic2=pic_url2, ip_addr=ip_addr,
+                            device_name=device_name, uuid=uu_id, serialno=serialno)
+            db.session.add(vehicle2)
+            db.session.commit()
+        except Exception as e:
+             logger.error(e)
+             db.session.rollback()
 
         request.json['AlarmInfoPlate']['result']['PlateResult']['imageFile'] = pic_path1
         request.json['AlarmInfoPlate']['result']['PlateResult']['imageFragmentFile'] = pic_path2
+
+        send_vehicle(json.dumps(request.json))
         msg_logger.info(request.json)
     except Exception as e:
         logger.error(e)
@@ -125,7 +133,7 @@ def heart_post():
     #    return jsonify({'message': 'Problems parsing JSON'}), 415
     try:
         msg_logger.info(request.json)
-        data = "{0},host={1},serialno={2} value={3}".format('heart', request.headers.get("X-Real-IP", request.remote_addr), request.json['heartbeat']['serialno'], request.json['heartbeat']['countid'], request.json['heartbeat']['timeStamp']['Timeval']['sec'] - int(time.time()))
+        data = "{0},host={1},serialno={2} value={3}".format('heart', request.headers.get("X-Real-IP", request.remote_addr), request.json['heartbeat']['serialno'], request.json['heartbeat']['timeStamp']['Timeval']['sec'] - int(time.time()))
         helper.write_info(app.config['INFLUXDB_URL'], data)
         if request.json.get('heartbeat', None) is not None:
             dev = set_device_state_by_ip(request.headers.get("X-Real-IP", request.remote_addr), request.json['heartbeat']['serialno'])

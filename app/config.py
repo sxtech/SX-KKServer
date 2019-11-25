@@ -20,6 +20,12 @@ class Config(object):
     # 时序数据库地址
     INFLUXDB_URL = 'http://localhost:8086/write?db=mz'
 
+    PULSAR = {
+        'url': 'pulsar://localhost:6651',
+        'topic': 'persistent://yc/mz/vehicle-pass',
+        'client': None,
+        'producer': None
+    }
 
 class Develop(Config):
     DEBUG = True
