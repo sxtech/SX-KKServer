@@ -6,6 +6,7 @@ import uuid
 import base64
 
 import arrow
+import pulsar
 from flask import g, request, make_response, jsonify, abort
 
 from . import db, app, cache, logger, access_logger, msg_logger
