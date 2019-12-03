@@ -1,6 +1,8 @@
 ﻿# -*- coding: utf-8 -*-
+import os
 import socket
 import struct
+import base64
 
 import requests
 
@@ -10,3 +12,13 @@ def ip2int(ip):
 
 def write_info(url, data):
     return requests.post(url, data=data)
+
+# 保存图片
+def save_img(path, name, data):
+    if not os.path.isdir(path):
+        os.makedirs(path)
+    imgname = '{0}/{1}.jpg'.format(path, name)
+    file = open(imgname, 'wb')
+    file.write(base64.b64decode(data))
+    file.close()
+    return imgname
