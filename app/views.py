@@ -23,16 +23,6 @@ def index_get():
     header = {'Cache-Control': 'public, max-age=60'}
     return jsonify(result), 200, header
 
-# 保存图片
-def save_img(path, name, data):
-    if not os.path.isdir(path):
-        os.makedirs(path)
-    imgname = '{0}/{1}.jpg'.format(path, name)
-    file = open(imgname, 'wb')
-    file.write(base64.b64decode(data))
-    file.close()
-    return imgname
-
 def send_vehicle(info):
     if app.config['PULSAR']['producer'] is None:
         try:
@@ -68,8 +58,8 @@ def upload_post():
         path_seq = (app.config['BASE_PATH'], 'Plate', pass_time.format('YYYYMMDD'), serialno, pass_time.format('HH'))
         img_path = '/'.join(path_seq)
         name = '{0}_{1}_{2}'.format(pass_time.format('YYYYMMDDHHmmss'), serialno, helper.ip2int(ip_addr))
-        pic_path1 = save_img(img_path, name, request.json['AlarmInfoPlate']['result']['PlateResult']['imageFile'])
-        pic_path2 = save_img(img_path, name+'_plate', request.json['AlarmInfoPlate']['result']['PlateResult']['imageFragmentFile'])
+        pic_path1 = helper.save_img(img_path, name, request.json['AlarmInfoPlate']['result']['PlateResult']['imageFile'])
+        pic_path2 = helper.save_img(img_path, name+'_plate', request.json['AlarmInfoPlate']['result']['PlateResult']['imageFragmentFile'])
         pic_url1 = pic_path1.replace(app.config['BASE_PATH'], app.config['BASE_URL_PATH'])
         pic_url2 = pic_path2.replace(app.config['BASE_PATH'], app.config['BASE_URL_PATH'])
         
@@ -133,7 +123,7 @@ def heart_post():
     #if not request.json:
     #    return jsonify({'message': 'Problems parsing JSON'}), 415
     try:
-        msg_logger.info(request.json)
+        #msg_logger.info(request.json)
         data = "{0},host={1},serialno={2} value={3}".format('heart', request.headers.get("X-Real-IP", request.remote_addr), request.json['heartbeat']['serialno'], request.json['heartbeat']['timeStamp']['Timeval']['sec'] - int(time.time()))
         helper.write_info(app.config['INFLUXDB_URL'], data)
         if request.json.get('heartbeat', None) is not None:
