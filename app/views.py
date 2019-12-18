@@ -31,7 +31,7 @@ def send_vehicle(info):
             app.config['PULSAR']['producer'].send((info).encode('utf-8'))
         except Exception as e:
             app.config['PULSAR']['producer'] = None
-            raise
+            logger.error(e)
     else:
         app.config['PULSAR']['producer'].send((info).encode('utf-8'))
 
@@ -39,6 +39,14 @@ def send_vehicle(info):
 @cache.memoize(60)
 def get_device_state_by_ip(ip):
     dev = DeviceState.query.filter_by(ip_addr=ip).first()
+    if dev is None:
+        return None
+    return {'stat_code': dev.stat_code, 'vehicle_point_no': dev.vehicle_point_no, 'direction': dev.direction}
+
+# 根据序号获取设备状态信息
+@cache.memoize(60)
+def get_device_state_by_se(se):
+    dev = DeviceState.query.filter_by(serialno=se).first()
     if dev is None:
         return None
     return {'stat_code': dev.stat_code, 'vehicle_point_no': dev.vehicle_point_no, 'direction': dev.direction}
@@ -63,7 +71,7 @@ def upload_post():
         pic_url1 = pic_path1.replace(app.config['BASE_PATH'], app.config['BASE_URL_PATH'])
         pic_url2 = pic_path2.replace(app.config['BASE_PATH'], app.config['BASE_URL_PATH'])
         
-        dev = get_device_state_by_ip(ip_addr)
+        dev = get_device_state_by_se(serialno)
         if dev is None:
             stat_code = 0
             vehicle_point_no = 1
@@ -102,8 +110,8 @@ def upload_post():
     return jsonify(result), 201
 
 #@cache.memoize(60)
-def set_device_state_by_ip(ip, serialno, white_list='[]'):
-    dev = DeviceState.query.filter_by(ip_addr=ip).first()
+def set_device_state_by_se(ip, serialno, white_list='[]'):
+    dev = DeviceState.query.filter_by(serialno=serialno).first()
     if dev is None:
         n = arrow.now('PRC').datetime.replace(tzinfo=None)
         new_dev = DeviceState(ip_addr=ip, serialno=serialno, white_list=white_list,
@@ -111,8 +119,8 @@ def set_device_state_by_ip(ip, serialno, white_list='[]'):
         db.session.add(new_dev)
         db.session.commit()
         return (new_dev.white_list, new_dev.last_modify,  new_dev.update_flag)
-    if dev.serialno != serialno:
-        dev.serialno = serialno
+    if dev.ip_addr != ip:
+        dev.ip_addr = ip
         dev.last_modify = arrow.now('PRC').datetime.replace(tzinfo=None)
         db.session.commit()
     return (dev.white_list, dev.last_modify,  dev.update_flag)
@@ -127,7 +135,7 @@ def heart_post():
         data = "{0},host={1},serialno={2} value={3}".format('heart', request.headers.get("X-Real-IP", request.remote_addr), request.json['heartbeat']['serialno'], request.json['heartbeat']['timeStamp']['Timeval']['sec'] - int(time.time()))
         helper.write_info(app.config['INFLUXDB_URL'], data)
         if request.json.get('heartbeat', None) is not None:
-            dev = set_device_state_by_ip(request.headers.get("X-Real-IP", request.remote_addr), request.json['heartbeat']['serialno'])
+            dev = set_device_state_by_se(request.headers.get("X-Real-IP", request.remote_addr), request.json['heartbeat']['serialno'])
     except Exception as e:
         logger.error(e)
     return jsonify({}), 201, {'Content-Type': 'application/json'}
