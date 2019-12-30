@@ -9,7 +9,8 @@ class Config(object):
     SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:123123@127.0.0.1:54321/site'
     # 数据库连接 dict
     SQLALCHEMY_BINDS = {
-        'env': 'mysql+pymysql://root:123123@127.0.0.1:3307/environ'
+        'env': 'mysql+pymysql://root:123123@127.0.0.1:3307/environ',
+        'yc': 'mssql+pymssql://sa:123123@127.0.0.1:1433/test'
     }
     # 连接池大小 int
     #SQLALCHEMY_POOL_SIZE = 20

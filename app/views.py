@@ -31,7 +31,7 @@ def send_vehicle(info):
             app.config['PULSAR']['producer'].send((info).encode('utf-8'))
         except Exception as e:
             app.config['PULSAR']['producer'] = None
-            logger.error(e)
+            logger.exception(e)
     else:
         app.config['PULSAR']['producer'].send((info).encode('utf-8'))
 
@@ -46,7 +46,7 @@ def get_device_state_by_ip(ip):
 # 根据序号获取设备状态信息
 @cache.memoize(60)
 def get_device_state_by_se(se):
-    dev = DeviceState.query.filter_by(serialno=se).first()
+    dev = SDeviceState.query.filter_by(serialno=se).first()
     if dev is None:
         return None
     return {'stat_code': dev.stat_code, 'vehicle_point_no': dev.vehicle_point_no, 'direction': dev.direction}
@@ -68,8 +68,8 @@ def upload_post():
         name = '{0}_{1}_{2}'.format(pass_time.format('YYYYMMDDHHmmss'), serialno, helper.ip2int(ip_addr))
         pic_path1 = helper.save_img(img_path, name, request.json['AlarmInfoPlate']['result']['PlateResult']['imageFile'])
         pic_path2 = helper.save_img(img_path, name+'_plate', request.json['AlarmInfoPlate']['result']['PlateResult']['imageFragmentFile'])
-        pic_url1 = pic_path1.replace(app.config['BASE_PATH'], app.config['BASE_URL_PATH'])
-        pic_url2 = pic_path2.replace(app.config['BASE_PATH'], app.config['BASE_URL_PATH'])
+        pic_url1 = pic_path1.replace(app.config['BASE_PATH'], '/images')
+        pic_url2 = pic_path2.replace(app.config['BASE_PATH'], '/images')
         
         dev = get_device_state_by_se(serialno)
         if dev is None:
@@ -81,7 +81,7 @@ def upload_post():
             vehicle_point_no = dev['vehicle_point_no']
             direction = dev['direction']
         try:
-            vehicle2 = VehiclePass2(plate_no=plate_no, plate_color=plate_color,
+            vehicle2 = SVehiclePass(plate_no=plate_no, plate_color=plate_color,
                             pass_time=pass_time.datetime, stat_code=stat_code,
                             vehicle_point_no=vehicle_point_no, direction=direction,
                             pic1=pic_url1, pic2=pic_url2, ip_addr=ip_addr,
@@ -92,10 +92,10 @@ def upload_post():
              logger.error(e)
              db.session.rollback()
 
-        request.json['AlarmInfoPlate']['result']['PlateResult']['imageFile'] = pic_path1
-        request.json['AlarmInfoPlate']['result']['PlateResult']['imageFragmentFile'] = pic_path2
+        #request.json['AlarmInfoPlate']['result']['PlateResult']['imageFile'] = pic_path1
+        #request.json['AlarmInfoPlate']['result']['PlateResult']['imageFragmentFile'] = pic_path2
 
-        send_vehicle(json.dumps(request.json))
+        #send_vehicle(json.dumps(request.json))
         msg_logger.info(request.json)
     except Exception as e:
         logger.error(e)
@@ -110,20 +110,20 @@ def upload_post():
     return jsonify(result), 201
 
 #@cache.memoize(60)
-def set_device_state_by_se(ip, serialno, white_list='[]'):
-    dev = DeviceState.query.filter_by(serialno=serialno).first()
+def set_device_state_by_se(ip, serialno):
+    dev = SDeviceState.query.filter_by(serialno=serialno).first()
     if dev is None:
         n = arrow.now('PRC').datetime.replace(tzinfo=None)
-        new_dev = DeviceState(ip_addr=ip, serialno=serialno, white_list=white_list,
+        new_dev = SDeviceState(ip_addr=ip, serialno=serialno,
                     create_time=n, last_modify=n, update_flag=1)
         db.session.add(new_dev)
         db.session.commit()
-        return (new_dev.white_list, new_dev.last_modify,  new_dev.update_flag)
+        return (new_dev.last_modify,  new_dev.update_flag)
     if dev.ip_addr != ip:
         dev.ip_addr = ip
         dev.last_modify = arrow.now('PRC').datetime.replace(tzinfo=None)
         db.session.commit()
-    return (dev.white_list, dev.last_modify,  dev.update_flag)
+    return (dev.last_modify,  dev.update_flag)
 
 
 @app.route('/heart', methods=['POST'])
